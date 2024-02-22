@@ -18,7 +18,7 @@ public class WeddingAppApplication {
 			@Override
 			public void addCorsMappings(CorsRegistry registry) {
 				registry.addMapping("/**")
-						.allowedMethods("GET", "PUT")
+						.allowedMethods("GET", "PUT", "POST")
 						.allowedOrigins("http://localhost:8080");
 			}
 		};
