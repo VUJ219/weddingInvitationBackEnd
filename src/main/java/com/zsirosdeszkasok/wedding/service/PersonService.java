@@ -1,26 +1,25 @@
 package com.zsirosdeszkasok.wedding.service;
 
-import com.zsirosdeszkasok.wedding.model.Family;
-import com.zsirosdeszkasok.wedding.model.Person;
-import com.zsirosdeszkasok.wedding.model.PersonRepository;
-import com.zsirosdeszkasok.wedding.service.dto.FamilyDto;
+import com.zsirosdeszkasok.wedding.model.*;
 import com.zsirosdeszkasok.wedding.service.dto.PersonDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Objects;
+import java.time.Instant;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class PersonService {
 
     private final PersonRepository personRepository;
+    private final PersonChangeRepository personChangeRepository;
     private final MapperService mapperService;
 
-    public PersonService(PersonRepository personRepository, FamilyService familyService, MapperService mapperService) {
+    public PersonService(PersonRepository personRepository, FamilyService familyService, PersonChangeRepository personChangeRepository, MapperService mapperService) {
         this.personRepository = personRepository;
+        this.personChangeRepository = personChangeRepository;
         this.mapperService = mapperService;
     }
 
@@ -34,12 +33,28 @@ public class PersonService {
     }
 
     public void savePerson(PersonDto personDto, Family family) {
-        personRepository.save(mapperService.map(personDto, family));
+        Person person = personRepository.save(mapperService.map(personDto, family));
+        personChangeRepository.save(new PersonChange(
+                null,
+                person,
+                person.getFamily(),
+                Instant.now(),
+                person.getHasAccepted(),
+                true
+        ));
     }
 
     public Person updatePerson(Integer id, PersonDto personDto) {
         Person person = personRepository.findById(id).orElseThrow();
         person.setHasAccepted(personDto.hasAccepted());
+        personChangeRepository.save(new PersonChange(
+                null,
+                person,
+                person.getFamily(),
+                Instant.now(),
+                personDto.hasAccepted(),
+                false
+        ));
         return personRepository.save(person);
     }
 
@@ -48,9 +63,9 @@ public class PersonService {
                 .map(member -> mapperService.map(member, family)).toList());
     }
 
-    public void updateMembers(Family family, List<PersonDto> memberDtos) {
+    public void updateMembers(Family family, List<PersonDto> memberDtos, FamilyChange familyChange) {
         List<Person> members = personRepository.findAllByFamilyId(family.getId());
-
+        Set<Integer> oldMemberIds = new HashSet<>();
         memberDtos.forEach(personDto -> {
             boolean isSavesAlready = false;
             Person currentPerson = null;
@@ -65,6 +80,7 @@ public class PersonService {
             }
             if (isSavesAlready) {
                 currentPerson.setHasAccepted(personDto.hasAccepted());
+                oldMemberIds.add(currentPerson.getId());
             } else {
                 currentPerson = new Person(
                         personDto.name(),
@@ -73,7 +89,17 @@ public class PersonService {
                 );
                 members.add(currentPerson);
             }
-            personRepository.saveAll(members);
         });
+        List<Person> savedMembers = personRepository.saveAll(members);
+        personChangeRepository.saveAll(savedMembers.stream().map(member -> {
+            return new PersonChange(
+                familyChange,
+                member,
+                family,
+                Instant.now(),
+                member.getHasAccepted(),
+                !oldMemberIds.contains(member.getId())
+            );
+        }).collect(Collectors.toList()));
     }
 }

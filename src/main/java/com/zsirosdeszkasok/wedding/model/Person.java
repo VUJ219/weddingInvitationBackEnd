@@ -12,6 +12,7 @@ public class Person {
 	@ManyToOne
 	private Family family;
 	private Boolean hasAccepted;
+	
 
 	public Person(String name, Family family, Boolean hasAccepted) {
 		this.id = null;

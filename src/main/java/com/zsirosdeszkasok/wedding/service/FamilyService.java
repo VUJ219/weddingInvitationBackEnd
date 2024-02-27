@@ -1,9 +1,7 @@
 package com.zsirosdeszkasok.wedding.service;
 
-import com.zsirosdeszkasok.wedding.model.Family;
-import com.zsirosdeszkasok.wedding.model.FamilyRepository;
+import com.zsirosdeszkasok.wedding.model.*;
 import com.zsirosdeszkasok.wedding.service.dto.FamilyDto;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -38,7 +36,8 @@ public class FamilyService {
     public Family saveFamily(FamilyDto familyDto) {
         return familyRepository.save(new Family(
                 Collections.emptyList(),
-                familyDto.comment()
+                familyDto.comment(),
+                null
         ));
     }
 

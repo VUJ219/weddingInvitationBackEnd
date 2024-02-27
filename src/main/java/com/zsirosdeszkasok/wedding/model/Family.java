@@ -13,11 +13,14 @@ public class Family {
     @OneToMany(mappedBy = "family")
 	private List<Person> members;
 	private String comment;
+    @OneToMany(mappedBy = "family")
+    private List<FamilyChange> changeHistory;
 
-    public Family(List<Person> members, String comment) {
+    public Family(List<Person> members, String comment, List<FamilyChange> changeHistory) {
         this.id = null;
         this.members = members;
         this.comment = comment;
+        this.changeHistory = changeHistory;
     }
     public Family() {
     }
