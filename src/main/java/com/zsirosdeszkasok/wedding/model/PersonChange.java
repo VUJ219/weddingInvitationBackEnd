@@ -29,6 +29,8 @@ public class PersonChange {
         this.newHasAccepted = newHasAccepted;
         this.wasCreated = wasCreated;
     }
+    public PersonChange() {
+    }
 
     public Integer getId() {
         return id;

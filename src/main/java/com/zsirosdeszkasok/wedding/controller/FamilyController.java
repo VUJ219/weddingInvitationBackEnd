@@ -2,6 +2,7 @@ package com.zsirosdeszkasok.wedding.controller;
 
 import com.zsirosdeszkasok.wedding.service.FamilyService;
 import com.zsirosdeszkasok.wedding.service.RegistrationService;
+import com.zsirosdeszkasok.wedding.service.dto.DetailedFamilyDto;
 import com.zsirosdeszkasok.wedding.service.dto.FamilyDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,12 @@ public class FamilyController {
     @ResponseStatus(HttpStatus.OK)
     public FamilyDto getFamilyById(@PathVariable Integer id) {
         return familyService.getFamilyDtoById(id);
+    }
+
+    @GetMapping(value = "/{id}/details")
+    @ResponseStatus(HttpStatus.OK)
+    public DetailedFamilyDto getFamilyDetailsById(@PathVariable Integer id) {
+        return familyService.getFamilyDetailsById(id);
     }
 
     @GetMapping
