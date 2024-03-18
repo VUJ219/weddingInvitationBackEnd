@@ -2,6 +2,7 @@ package com.zsirosdeszkasok.wedding.controller;
 
 import com.zsirosdeszkasok.wedding.service.PersonService;
 import com.zsirosdeszkasok.wedding.service.RegistrationService;
+import com.zsirosdeszkasok.wedding.service.dto.PeopleMetadataDto;
 import com.zsirosdeszkasok.wedding.service.dto.PersonDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -29,8 +30,31 @@ public class PersonController {
     }
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<PersonDto> getUsers() {
+    public List<PersonDto> getPeople() {
         return personService.getListOfAllPeople();
+    }
+    @GetMapping(value = "/metadata")
+    @ResponseStatus(HttpStatus.OK)
+    public PeopleMetadataDto getPeopleMetadata() {
+        return personService.getPeopleMetadata();
+    }
+
+    @GetMapping(value = "/accepted")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PersonDto> getPeopleWhoAccepted() {
+        return personService.getPeopleByHasAccepted(true);
+    }
+
+    @GetMapping(value = "/declined")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PersonDto> getPeoplesWhoDeclined() {
+        return personService.getPeopleByHasAccepted(false);
+    }
+
+    @GetMapping(value = "/no-response")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PersonDto> getPeoplesWhoDidNotRespond() {
+        return personService.getPeopleByHasAccepted(null);
     }
 
     @PostMapping

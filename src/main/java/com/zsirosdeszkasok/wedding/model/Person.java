@@ -2,6 +2,9 @@ package com.zsirosdeszkasok.wedding.model;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "person")
 public class Person {
@@ -12,6 +15,8 @@ public class Person {
 	@ManyToOne
 	private Family family;
 	private Boolean hasAccepted;
+	@OneToMany(mappedBy = "person")
+	private List<PersonChange> changeHistory;
 	
 
 	public Person(String name, Family family, Boolean hasAccepted) {
@@ -19,6 +24,7 @@ public class Person {
 		this.name = name;
 		this.family = family;
 		this.hasAccepted = hasAccepted;
+		this.changeHistory = new ArrayList<>();
 	}
 	public Person() {
 	}
@@ -37,6 +43,10 @@ public class Person {
 
 	public Boolean getHasAccepted() {
 		return hasAccepted;
+	}
+
+	public List<PersonChange> getChangeHistory() {
+		return changeHistory;
 	}
 
 	public void setHasAccepted(Boolean hasAccepted) {

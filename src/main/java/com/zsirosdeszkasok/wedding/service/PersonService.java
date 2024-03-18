@@ -1,6 +1,7 @@
 package com.zsirosdeszkasok.wedding.service;
 
 import com.zsirosdeszkasok.wedding.model.*;
+import com.zsirosdeszkasok.wedding.service.dto.PeopleMetadataDto;
 import com.zsirosdeszkasok.wedding.service.dto.PersonDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ public class PersonService {
     private final PersonChangeRepository personChangeRepository;
     private final MapperService mapperService;
 
-    public PersonService(PersonRepository personRepository, FamilyService familyService, PersonChangeRepository personChangeRepository, MapperService mapperService) {
+    public PersonService(PersonRepository personRepository, PersonChangeRepository personChangeRepository, MapperService mapperService) {
         this.personRepository = personRepository;
         this.personChangeRepository = personChangeRepository;
         this.mapperService = mapperService;
@@ -91,15 +92,62 @@ public class PersonService {
             }
         });
         List<Person> savedMembers = personRepository.saveAll(members);
-        personChangeRepository.saveAll(savedMembers.stream().map(member -> {
-            return new PersonChange(
-                familyChange,
-                member,
-                family,
-                Instant.now(),
-                member.getHasAccepted(),
-                !oldMemberIds.contains(member.getId())
-            );
-        }).collect(Collectors.toList()));
+        personChangeRepository.saveAll(savedMembers.stream().map(member -> new PersonChange(
+            familyChange,
+            member,
+            family,
+            Instant.now(),
+            member.getHasAccepted(),
+            !oldMemberIds.contains(member.getId())
+        )).collect(Collectors.toList()));
+    }
+
+    public PeopleMetadataDto getPeopleMetadata() {
+        List<Person> allPeople = personRepository.findAll();
+        int numberOfPeopleWhoDidNotFillOut = 0;
+        int numberOfOriginalPeopleWhoAccepted = 0;
+        int numberOfNewPeopleWhoAccepted = 0;
+        int numberOfOriginalPeopleWhoDeclined = 0;
+        int numberOfNewPeopleWhoDeclined = 0;
+        for (Person person : allPeople) {
+            if (person.getHasAccepted() == null) {
+                numberOfPeopleWhoDidNotFillOut++;
+            } else {
+                boolean isNewPerson = person.getChangeHistory().stream().anyMatch(PersonChange::getWasCreated);
+                if (person.getHasAccepted()) {
+                    if (isNewPerson) {
+                        numberOfNewPeopleWhoAccepted++;
+                    } else {
+                        numberOfOriginalPeopleWhoAccepted++;
+                    }
+                } else {
+                    if (isNewPerson) {
+                        numberOfNewPeopleWhoDeclined++;
+                    } else {
+                        numberOfOriginalPeopleWhoDeclined++;
+                    }
+                }
+            }
+        }
+        return new PeopleMetadataDto(
+                allPeople.size(),
+                numberOfPeopleWhoDidNotFillOut,
+                new PeopleMetadataDto.FilledOutData(
+                        numberOfOriginalPeopleWhoAccepted + numberOfNewPeopleWhoAccepted + numberOfOriginalPeopleWhoDeclined + numberOfNewPeopleWhoDeclined,
+                        new PeopleMetadataDto.FilledOutData.SubData(
+                                numberOfOriginalPeopleWhoAccepted + numberOfNewPeopleWhoAccepted,
+                                numberOfOriginalPeopleWhoAccepted,
+                                numberOfNewPeopleWhoAccepted
+                        ),
+                        new PeopleMetadataDto.FilledOutData.SubData(
+                                numberOfOriginalPeopleWhoDeclined + numberOfNewPeopleWhoDeclined,
+                                numberOfOriginalPeopleWhoDeclined,
+                                numberOfNewPeopleWhoDeclined
+                        )
+                )
+        );
+    }
+    public List<PersonDto> getPeopleByHasAccepted(Boolean hasAccepted) {
+        return personRepository.findAllByHasAccepted(hasAccepted).stream().map(mapperService::map).collect(Collectors.toList());
     }
 }
